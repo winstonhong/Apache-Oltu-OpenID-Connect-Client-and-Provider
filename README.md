@@ -10,7 +10,7 @@ Installation
 ------------
 + Download the source repository from GitHub.
 ```
-git clone https://github.com/winstonhong/Apache-Oltu-OpenID-Connect-Client-and-Provider.git
+git clone https://github.com/winstonhong/Apache-Oltu-OpenID-Connect-Client-and-Provider
 ``` 
 + Build OAuth 2.0 and OpenID Connect library from Apache Oltu source code.
 ```
@@ -33,18 +33,27 @@ OpenID Connect Authentication Demo
 ------------
 + Access the link "http://localhost:8080" to launch the OpenID Connect authentication demo
 + Click **OpenID Connect Application**
-+ Click **Get Authorization**
-+ Input **Username/Password** : username/password , and then click **Login** 
++ Input **Requested Access Scope** : openid , <br>
+input **End-User Authorization URL** : http://localhost:9001/auth/oauth2/authz , <br>
+input **Token Endpoint** : http://localhost:9001/auth/oauth2/token , <br>
+input **Client ID** : client_id , <br>
+input **Client Secret** : client_secret , <br>
+and then click **Get Authorization**
++ Input **Username/Password** : username/password , <br>
+and then click **Login**
 + Click **Grant permission**
 + Click **Get Token**
-+ Click **Get Resource** to retrieve User Info.
++ Ensure that the message "ID Token is valid" is displayed within the **OpenId Connect** block,<br>
+input **Resource URL** : http://localhost:9001/auth/oauth2/resource_server/resource_query ,<br>
+select **queryParameter** from the drop-down list of **Authenticated Request Type**, <br>
+and then click **Get Resource** to retrieve User Info.
 
 
 References
 -------
 Apache Oltu https://oltu.apache.org/
 
-OAuthh 2.0 and OpenID Connect libraries https://oauth.net/code/
+OAuthh 2.0 and OpenID Connect libraries https://github.com/apache/oltu
 
 Support
 -------
