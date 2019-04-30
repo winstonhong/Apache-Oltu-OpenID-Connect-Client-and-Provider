@@ -29,7 +29,16 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
+import java.math.BigInteger;
+import java.security.KeyFactory;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.spec.RSAPrivateKeySpec;
+import java.util.UUID;
 
+import org.apache.oltu.commons.encodedtoken.TokenDecoder;
+import org.apache.oltu.oauth2.as.issuer.MD5Generator;
+import org.apache.oltu.oauth2.as.issuer.OAuthIssuer;
+import org.apache.oltu.oauth2.as.issuer.OAuthIssuerImpl;
 import org.apache.oltu.oauth2.as.request.OAuthTokenRequest;
 import org.apache.oltu.oauth2.as.response.OAuthASResponse;
 import org.apache.oltu.oauth2.common.OAuth;
@@ -38,7 +47,15 @@ import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.apache.oltu.oauth2.common.message.OAuthResponse;
 import org.apache.oltu.oauth2.common.message.types.GrantType;
+import org.apache.oltu.oauth2.jwt.JWT;
+import org.apache.oltu.oauth2.jwt.io.JWTWriter;
+import org.apache.oltu.oauth2.jwt.io.JWTClaimsSetWriter;
+import org.apache.oltu.oauth2.jwt.io.JWTHeaderWriter;
+import org.apache.oltu.jose.jws.signature.impl.SignatureMethodRSAImpl;
+import org.apache.oltu.jose.jws.signature.impl.PrivateKey;
 import org.apache.oltu.oauth2.provider.demo.Common;
+import org.apache.oltu.oauth2.provider.demo.OIDC;
+import org.apache.oltu.oauth2.provider.demo.OpenidASResponse;
 
 /**
  *
@@ -108,12 +125,24 @@ public class TokenEndpoint extends HttpServlet {
 				return;
 			}
 
-			OAuthResponse resp = OAuthASResponse
-					.tokenResponse(HttpServletResponse.SC_OK)
-					.setAccessToken(Common.ACCESS_TOKEN_VALID)
-					.setTokenType(OAuth.DEFAULT_TOKEN_TYPE.toString())
-					.setExpiresIn("3600")
-					.buildJSONMessage();
+			OAuthResponse resp = null;
+
+			if (oauthRequest.getParam(OAuth.OAUTH_SCOPE).contains(Common.OPENID)) {
+				resp =  OpenidASResponse
+						.tokenResponse(HttpServletResponse.SC_OK)
+						.setIDToken(createIdToken(request))
+						.setAccessToken(Common.ACCESS_TOKEN_VALID)
+						.setTokenType(OAuth.DEFAULT_TOKEN_TYPE.toString())
+						.setExpiresIn("3600")
+						.buildJSONMessage();
+			} else {
+				resp = OAuthASResponse
+						.tokenResponse(HttpServletResponse.SC_OK)
+						.setAccessToken(Common.ACCESS_TOKEN_VALID)
+						.setTokenType(OAuth.DEFAULT_TOKEN_TYPE.toString())
+						.setExpiresIn("3600")
+						.buildJSONMessage();
+			}
 
 			response.setStatus(resp.getResponseStatus());
 			response.setContentType("application/json; charset=UTF-8");
@@ -134,5 +163,90 @@ public class TokenEndpoint extends HttpServlet {
 			return;
 		}
 	}
-}
 
+	/**
+	 * Create ID token
+	 * @param request {@link HttpServletRequest}
+	 * @return idToken {@link idToken}
+	 */
+	private String createIdToken(HttpServletRequest request) {
+
+		String openid_username = Common.USERNAME;
+		String openid_email =  Common.EMAIL;
+		String client_id = Common.CLIENT_ID;
+		String nonce = request.getHeader(OIDC.AuthZRequest.NONCE);
+		if (nonce == null) {
+			nonce = UUID.randomUUID().toString().replace("-", "");
+		}
+
+		long id_token_generation_time = System.currentTimeMillis()/1000;
+		long id_token_expiration_time = id_token_generation_time + 3600;
+
+		JWT idJwt = new JWT.Builder()
+				// header
+				.setHeaderAlgorithm(OIDC.id_token_alg1)
+				.setHeaderCustomField(OIDC.Response.KID, OIDC.jwk_1_kid)
+				// claimset
+				.setClaimsSetExpirationTime(id_token_expiration_time)
+				.setClaimsSetIssuedAt(id_token_generation_time)
+				.setClaimsSetCustomField(OIDC.IdToken.ISS, request.getScheme() + "://" + request.getServerName() + ":"
+						+ request.getServerPort())
+				.setClaimsSetCustomField(OIDC.IdToken.SUB, openid_username)
+				.setClaimsSetCustomField(OIDC.IdToken.AUD, client_id)
+				.setClaimsSetCustomField(OIDC.IdToken.EMAIL, openid_email)
+				.setClaimsSetCustomField("verified_email", "true")
+				.setClaimsSetCustomField(OIDC.IdToken.EMAIL_VERIFIED, "true")
+				.setClaimsSetCustomField(OIDC.Response.KID, OIDC.jwk_1_kid)
+				.setClaimsSetCustomField(OIDC.AuthZRequest.NONCE, nonce)
+				// signature
+				.setSignature(null)
+				.build();
+
+		String idJwt_signature = null;
+		try{
+			final byte[] n = TokenDecoder.base64DecodeToByte(OIDC.jwk_1_n);
+			final byte[] d = TokenDecoder.base64DecodeToByte(OIDC.jwk_1_d);
+
+			BigInteger N = new BigInteger(1, n);
+			BigInteger D = new BigInteger(1, d);
+
+			KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+			RSAPrivateKeySpec privKeySpec = new RSAPrivateKeySpec(N, D);
+			RSAPrivateKey rsaPrivKey = (RSAPrivateKey) keyFactory.generatePrivate(privKeySpec);
+
+			String idJwt_header = new JWTHeaderWriter().write(idJwt.getHeader());
+			String idJwt_payload = new JWTClaimsSetWriter().write(idJwt.getClaimsSet());
+			SignatureMethodRSAImpl sRsaImpl = new SignatureMethodRSAImpl(OIDC.id_token_alg1);
+
+			idJwt_signature = sRsaImpl.calculate(TokenDecoder.base64Encode(idJwt_header),
+					TokenDecoder.base64Encode(idJwt_payload), new PrivateKey(rsaPrivKey));
+
+		}catch(Exception e){
+			throw new RuntimeException(e);
+		}
+
+		idJwt = new JWT.Builder()
+				// header
+				.setHeaderAlgorithm(OIDC.id_token_alg1)
+				.setHeaderCustomField(OIDC.Response.KID, OIDC.jwk_1_kid)
+				// claimset
+				.setClaimsSetExpirationTime(id_token_expiration_time)
+				.setClaimsSetIssuedAt(id_token_generation_time)
+				.setClaimsSetCustomField(OIDC.IdToken.ISS, request.getScheme() + "://" + request.getServerName() + ":"
+						+ request.getServerPort())
+				.setClaimsSetCustomField(OIDC.IdToken.SUB, openid_username)
+				.setClaimsSetCustomField(OIDC.IdToken.AUD, client_id)
+				.setClaimsSetCustomField(OIDC.IdToken.EMAIL, openid_email)
+				.setClaimsSetCustomField("verified_email", "true")
+				.setClaimsSetCustomField(OIDC.IdToken.EMAIL_VERIFIED, "true")
+				.setClaimsSetCustomField(OIDC.Response.KID, OIDC.jwk_1_kid)
+				.setClaimsSetCustomField(OIDC.AuthZRequest.NONCE, nonce)
+				// signature
+				.setSignature(idJwt_signature)
+				.build();
+
+		String idToken = new JWTWriter().write(idJwt);
+		return idToken;
+	}
+
+}

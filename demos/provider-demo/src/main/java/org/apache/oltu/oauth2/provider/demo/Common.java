@@ -73,12 +73,14 @@ public final class Common {
     public static final String CLIENT_SECRET = "client_secret";
     public static final String USERNAME = "username";
     public static final String PASSWORD = "password";
+    public static final String EMAIL = "username@example.com";
 
     public static final String HEADER_WWW_AUTHENTICATE = "WWW-Authenticate";
     public static final String HEADER_AUTHORIZATION = "Authorization";
 
     public static final String AUTHORIZATION_CODE = "known_authz_code";
     public static final String STATE = "state";
+    public static final String OPENID = "openid";
 
     public static final String ASSERTION = "<samlp:AuthnRequest\n"
         + "   xmlns:samlp=\"urn:oasis:names:tc:SAML:2.0:protocol\"\n"
@@ -98,7 +100,7 @@ public final class Common {
     public static final String ACCESS_TOKEN_ENDPOINT = "http://localhost:9001/auth/oauth2/token";
     public static final String UNAUTHENTICATED_ACCESS_TOKEN_ENDPOINT = "http://localhost:9001/auth/oauth2/unauth-token";
     public static final String AUTHORIZATION_ENPOINT = "http://localhost:9001/auth/oauth2/authz";
-    public static final String REDIRECT_URL = "http://localhost:9002/auth/oauth2/redirect";
+    public static final String REDIRECT_URL = "http://localhost:8080/redirect";
     public static final String RESOURCE_SERVER = "http://localhost:9001/auth/oauth2/resource_server";
     public static final String PROTECTED_RESOURCE_HEADER = "/resource_header";
     public static final String PROTECTED_RESOURCE_BODY = "/resource_body";

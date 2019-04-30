@@ -58,5 +58,23 @@
     <servlet-name>resourceQueryEndpoint</servlet-name>
     <url-pattern>/auth/oauth2/resource_server/resource_query</url-pattern>
   </servlet-mapping>
+
+  <servlet>
+    <servlet-name>jwkEndpoint</servlet-name>
+    <servlet-class>org.apache.oltu.oauth2.provider.demo.endpoints.JwkEndpoint</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>jwkEndpoint</servlet-name>
+    <url-pattern>/auth/oauth2/certs</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>metadataEndpoint</servlet-name>
+    <servlet-class>org.apache.oltu.oauth2.provider.demo.endpoints.MetadataEndpoint</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>metadataEndpoint</servlet-name>
+    <url-pattern>/openidconnect/.well-known/openid-configuration</url-pattern>
+  </servlet-mapping>
   
 </web-app>
