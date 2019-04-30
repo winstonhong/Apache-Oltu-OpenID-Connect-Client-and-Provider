@@ -69,7 +69,7 @@ public class MainController {
         }
 
         boolean selected = false;
-        if (Utils.GENERIC.equalsIgnoreCase(app)) {
+        if (Utils.GENERIC.equalsIgnoreCase(app) || Utils.OPENID.equalsIgnoreCase(app)) {
             selected = true;
         } else if (Utils.GITHUB.equalsIgnoreCase(app)) {
             selected = true;

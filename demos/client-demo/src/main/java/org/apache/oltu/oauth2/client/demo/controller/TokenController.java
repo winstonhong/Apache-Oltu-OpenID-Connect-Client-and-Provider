@@ -26,6 +26,7 @@ import org.apache.oltu.oauth2.client.URLConnectionClient;
 import org.apache.oltu.oauth2.client.demo.Utils;
 import org.apache.oltu.oauth2.client.demo.exception.ApplicationException;
 import org.apache.oltu.oauth2.client.demo.model.OAuthParams;
+import org.apache.oltu.oauth2.client.demo.OpenidClientRequest;
 import org.apache.oltu.oauth2.client.request.OAuthClientRequest;
 import org.apache.oltu.oauth2.client.response.GitHubTokenResponse;
 import org.apache.oltu.oauth2.client.response.OAuthAccessTokenResponse;
@@ -70,6 +71,7 @@ public class TokenController {
                 .setClientSecret(oauthParams.getClientSecret())
                 .setRedirectURI(oauthParams.getRedirectUri())
                 .setCode(oauthParams.getAuthzCode())
+                .setScope(oauthParams.getScope())
                 .setGrantType(GrantType.AUTHORIZATION_CODE)
                 .buildBodyMessage();
 
@@ -88,6 +90,10 @@ public class TokenController {
                 oauthParams.setResourceUrl(Utils.GOOGLE_RESOURCE_URL);
             } else if (Utils.LINKEDIN.equalsIgnoreCase(app)) {
                 oauthParams.setResourceUrl(Utils.LINKEDIN_RESOURCE_URL);
+            } else if (Utils.OPENID.equalsIgnoreCase(app)) {
+                cl = OpenIdConnectResponse.class;
+                String nonce = Utils.findCookieValue(req, Utils.Request.NONCE);
+                request.addHeader(Utils.Request.NONCE, nonce);
             }
 
             OAuthAccessTokenResponse oauthResponse = client.accessToken(request, cl);
@@ -107,6 +113,19 @@ public class TokenController {
 
                     URI uri = URI.create(oauthParams.getTokenEndpoint());
                     oauthParams.setIdTokenValid(openIdConnectResponse.checkId(uri.getHost(), oauthParams.getClientId()));
+                }
+            }
+
+            if (Utils.OPENID.equalsIgnoreCase(app)) {
+                OpenIdConnectResponse openIdConnectResponse = ((OpenIdConnectResponse) oauthResponse);
+                JWT idToken = openIdConnectResponse.getIdToken();
+                if (idToken != null) {
+                    oauthParams.setIdToken(idToken.getRawString());
+
+                    oauthParams.setHeader(new JWTHeaderWriter().write(idToken.getHeader()));
+                    oauthParams.setClaimsSet(new JWTClaimsSetWriter().write(idToken.getClaimsSet()));
+
+                    oauthParams.setIdTokenValid(openIdConnectResponse.checkId(Utils.OPENID_ISSUER, oauthParams.getClientId()));
                 }
             }
 

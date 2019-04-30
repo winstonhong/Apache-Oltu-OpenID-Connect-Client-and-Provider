@@ -23,6 +23,7 @@ package org.apache.oltu.oauth2.client.demo.controller;
 import org.apache.oltu.oauth2.client.demo.Utils;
 import org.apache.oltu.oauth2.client.demo.exception.ApplicationException;
 import org.apache.oltu.oauth2.client.demo.model.OAuthParams;
+import org.apache.oltu.oauth2.client.demo.OpenidClientRequest;
 import org.apache.oltu.oauth2.client.request.OAuthClientRequest;
 import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
 import org.apache.oltu.oauth2.common.message.types.ResponseType;
@@ -38,6 +39,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
 /**
@@ -71,14 +73,30 @@ public class AuthzController {
             res.addCookie(new Cookie("state", oauthParams.getState()));
             res.addCookie(new Cookie("app", oauthParams.getApplication()));
 
-            OAuthClientRequest request = OAuthClientRequest
-                .authorizationLocation(oauthParams.getAuthzEndpoint())
-                .setClientId(oauthParams.getClientId())
-                .setRedirectURI(oauthParams.getRedirectUri())
-                .setResponseType(ResponseType.CODE.toString())
-                .setScope(oauthParams.getScope())
-                .setState(oauthParams.getState())
-                .buildQueryMessage();
+            OAuthClientRequest request = null;
+
+            if (Utils.OPENID.equals(oauthParams.getApplication())) {
+                String nonce = Utils.OPENID_NONCE;
+                res.addCookie(new Cookie(Utils.Request.NONCE, nonce));
+                request  = OpenidClientRequest
+                        .authorizationLocation(oauthParams.getAuthzEndpoint())
+                        .setNonce(nonce)
+                        .setClientId(oauthParams.getClientId())
+                        .setRedirectURI(oauthParams.getRedirectUri())
+                        .setResponseType(ResponseType.CODE.toString())
+                        .setScope(oauthParams.getScope())
+                        .setState(oauthParams.getState())
+                        .buildQueryMessage();
+            } else {
+                request = OAuthClientRequest
+                        .authorizationLocation(oauthParams.getAuthzEndpoint())
+                        .setClientId(oauthParams.getClientId())
+                        .setRedirectURI(oauthParams.getRedirectUri())
+                        .setResponseType(ResponseType.CODE.toString())
+                        .setScope(oauthParams.getScope())
+                        .setState(oauthParams.getState())
+                        .buildQueryMessage();
+            }
 
             return new ModelAndView(new RedirectView(request.getLocationUri()));
         } catch (ApplicationException e) {

@@ -31,6 +31,7 @@ import org.springframework.stereotype.Component;
 import javax.servlet.ServletContext;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import java.util.UUID;
 
 @Component
 public final class Utils {
@@ -56,6 +57,13 @@ public final class Utils {
     public static final String REQUEST_TYPE_BODY = "bodyParameter";
 
     public static final String GENERIC = "generic";
+    public static final String OPENID = "openid";
+    public static final String OPENID_NONCE = UUID.randomUUID().toString().replace("-", "");
+    public static final String OPENID_ISSUER = "http://localhost:9001";
+
+    public static final class Request {
+        public static final String NONCE = "nonce";
+    }
 
     public static final String FACEBOOK = OAuthProviderType.FACEBOOK.getProviderName();
     public static final String FACEBOOK_AUTHZ = OAuthProviderType.FACEBOOK.getAuthzEndpoint();

@@ -49,6 +49,10 @@
       <c:url var="actionUrl" value="/get_token"/>
       <form:form commandName="oauthParams" cssClass="form-horizontal clearfix" action="${actionUrl}">
         <div class="form-group">
+          <label for="scope" class="col-lg-3 control-label">Requested Access Scope</label>
+          <div class="col-lg-9"><form:input class="form-control" id="scope" path="scope" /></div>
+        </div>
+        <div class="form-group">
           <label for="authzCode" class="col-lg-3 control-label">Authorization Code</label>
           <div class="col-lg-9"><form:input class="form-control" id="authzCode" path="authzCode" /></div>
         </div>
