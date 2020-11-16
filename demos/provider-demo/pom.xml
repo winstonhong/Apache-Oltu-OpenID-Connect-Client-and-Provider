@@ -37,7 +37,7 @@
     <spring-mock.version>2.0.8</spring-mock.version>
     <easy-mock.version>3.0</easy-mock.version>
     <servlet-api.version>2.5</servlet-api.version>
-    <jetty.version>7.1.5.v20100705</jetty.version>
+    <jetty.version>9.4.34.v20201102</jetty.version>
     <pmd.version>2.5</pmd.version>    
     <jersey-server.version>1.8</jersey-server.version>
     <slf4j.version>1.7.25</slf4j.version>
