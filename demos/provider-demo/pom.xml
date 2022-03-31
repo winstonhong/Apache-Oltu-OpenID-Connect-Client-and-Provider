@@ -33,7 +33,7 @@
     <oltu.oauth2.jwt.version>1.0.4-SNAPSHOT</oltu.oauth2.jwt.version>
     <oltu.oidc.version>0.0.1-SNAPSHOT</oltu.oidc.version>
     <cxf.version>2.2.10</cxf.version>
-    <org.springframework.version>4.3.22.RELEASE</org.springframework.version>
+    <org.springframework.version>5.3.18</org.springframework.version>
     <spring-mock.version>2.0.8</spring-mock.version>
     <easy-mock.version>3.0</easy-mock.version>
     <servlet-api.version>2.5</servlet-api.version>
